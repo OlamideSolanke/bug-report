@@ -4,7 +4,7 @@ import { resolvers } from "@/graphql/resolvers";
 import { getSessionUser } from "@/lib/auth";
 
 const { handleRequest } = createYoga<{ params: Promise<unknown> }>({
-  schema: createSchema({ typeDefs, resolvers }),
+ schema: createSchema({ typeDefs, resolvers }) as never,
   graphqlEndpoint: "/api/graphql",
   fetchAPI: { Response },
   maskedErrors: process.env.NODE_ENV === "production",
