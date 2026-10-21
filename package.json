@@ -12,6 +12,7 @@
     "@apollo/client": "^3.14.1",
     "graphql": "^16.14.2",
     "graphql-yoga": "^5.24.6",
+    "jose": "^6.2.12",
     "mongoose": "^9.11.2",
     "next": "16.4.1",
     "react": "19.3.0",

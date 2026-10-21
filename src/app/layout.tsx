@@ -1,9 +1,8 @@
 import "./globals.css";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import Script from "next/script";
 import ApolloWrapper from "@/lib/apollo-provider";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
+import NavBar from "@/components/NavBar";
 
 export const metadata = { title: "Bug Tracker" };
 
@@ -26,20 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           dangerouslySetInnerHTML={{ __html: applySavedTheme }}
         />
         <ApolloWrapper>
-          <header className="border-b bg-white">
-            <nav className="mx-auto flex max-w-4xl items-center gap-6 p-4">
-              <Link href="/" className="font-semibold">
-                Bug Tracker
-              </Link>
-              <Link
-                href="/users"
-                className="text-sm text-gray-600 hover:text-black"
-              >
-                Team
-              </Link>
-              <ThemeSwitcher />
-            </nav>
-          </header>
+          <NavBar />
           <main className="mx-auto max-w-4xl p-4">{children}</main>
         </ApolloWrapper>
       </body>

@@ -13,9 +13,10 @@ import {
   UPDATE_STATUS,
 } from "@/lib/queries";
 import { PriorityBadge, StatusBadge } from "@/components/Badges";
+import RequireAuth from "@/components/RequireAuth";
 import type { Bug, User } from "@/lib/types";
 
-export default function BugPage() {
+function BugContent() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -31,7 +32,6 @@ export default function BugPage() {
     refetchQueries: ["GetBug"],
   });
   const [text, setText] = useState("");
-  const [commenter, setCommenter] = useState("");
 
   if (loading && !data) return <p>Loading…</p>;
   if (error) return <p className="text-red-600">{error.message}</p>;
@@ -42,10 +42,8 @@ export default function BugPage() {
 
   async function handleComment(e: SyntheticEvent) {
     e.preventDefault();
-    if (!text.trim() || !commenter || !bug) return;
-    await addComment({
-      variables: { input: { bugId: bug.id, userId: commenter, text } },
-    });
+    if (!text.trim() || !bug) return;
+    await addComment({ variables: { input: { bugId: bug.id, text } } });
     setText("");
   }
 
@@ -154,28 +152,22 @@ export default function BugPage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <div className="flex gap-2">
-            <select
-              className={field}
-              value={commenter}
-              onChange={(e) => setCommenter(e.target.value)}
-            >
-              <option value="">Comment as…</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
-            <button
-              disabled={posting}
-              className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-            >
-              Post comment
-            </button>
-          </div>
+          <button
+            disabled={posting}
+            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
+            Post comment
+          </button>
         </form>
       </section>
     </div>
+  );
+}
+
+export default function BugPage() {
+  return (
+    <RequireAuth adminOnly>
+      <BugContent />
+    </RequireAuth>
   );
 }

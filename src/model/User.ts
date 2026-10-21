@@ -10,7 +10,8 @@ const UserSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    role: { type: String, enum: ["ADMIN", "DEVELOPER"], default: "DEVELOPER" },
+    passwordHash: { type: String, required: true, select: false },
+    role: { type: String, enum: ["ADMIN", "USER"], default: "USER" },
   },
   { timestamps: true },
 );

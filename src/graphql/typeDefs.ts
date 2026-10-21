@@ -1,5 +1,5 @@
 export const typeDefs = `#graphql
-  enum Role { ADMIN DEVELOPER }
+  enum Role { ADMIN USER }
   enum Priority { LOW MEDIUM HIGH }
   enum Status { OPEN IN_PROGRESS RESOLVED }
 
@@ -32,25 +32,22 @@ export const typeDefs = `#graphql
     createdAt: String!
   }
 
-  input CreateUserInput { name: String!, email: String!, role: Role }
   input CreateBugInput {
     title: String!
     description: String
     priority: Priority
-    createdBy: ID!
     assignedTo: ID
   }
-  input AddCommentInput { bugId: ID!, userId: ID!, text: String! }
+  input AddCommentInput { bugId: ID!, text: String! }
 
   type Query {
+    me: User
     users: [User!]!
-    user(id: ID!): User
     bugs(status: Status, priority: Priority): [Bug!]!
     bug(id: ID!): Bug
   }
 
   type Mutation {
-    createUser(input: CreateUserInput!): User!
     createBug(input: CreateBugInput!): Bug!
     assignBug(bugId: ID!, userId: ID): Bug
     updateBugStatus(id: ID!, status: Status!): Bug

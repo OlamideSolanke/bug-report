@@ -5,17 +5,21 @@ import Link from "next/link";
 import { useMutation, useQuery } from "@apollo/client";
 import { CREATE_BUG, GET_BUGS, GET_USERS } from "@/lib/queries";
 import { PriorityBadge, StatusBadge } from "@/components/Badges";
+import RequireAuth from "@/components/RequireAuth";
+import { useMe } from "@/lib/useMe";
 import type { Bug, User } from "@/lib/types";
 
 const emptyForm = {
   title: "",
   description: "",
   priority: "MEDIUM",
-  createdBy: "",
   assignedTo: "",
 };
 
-export default function HomePage() {
+function HomeContent() {
+  const { me } = useMe();
+  const isAdmin = me?.role === "ADMIN";
+
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
   const [form, setForm] = useState(emptyForm);
@@ -26,6 +30,7 @@ export default function HomePage() {
     fetchPolicy: "cache-and-network",
   });
   const { data: usersData } = useQuery<{ users: User[] }>(GET_USERS, {
+    skip: !isAdmin,
     fetchPolicy: "cache-and-network",
   });
   const [createBug, { loading: creating }] = useMutation(CREATE_BUG, {
@@ -37,11 +42,16 @@ export default function HomePage() {
   async function handleSubmit(e: SyntheticEvent) {
     e.preventDefault();
     setFormError("");
-    if (!form.createdBy)
-      return setFormError("Choose who is reporting this bug.");
     try {
       await createBug({
-        variables: { input: { ...form, assignedTo: form.assignedTo || null } },
+        variables: {
+          input: {
+            title: form.title,
+            description: form.description,
+            priority: form.priority,
+            assignedTo: isAdmin ? form.assignedTo || null : null,
+          },
+        },
       });
       setForm(emptyForm);
     } catch (err) {
@@ -54,15 +64,8 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <section className="rounded-lg border bg-white p-4">
-        <h2 className="mb-3 font-semibold">Report a bug</h2>
-        {users.length === 0 && (
-          <p className="mb-3 text-sm text-amber-700">
-            No team members yet.{" "}
-            <Link href="/users" className="underline">
-              Add some first.
-            </Link>
-          </p>
-        )}
+        <h2 className="mb-1 font-semibold">Report a bug</h2>
+        <p className="mb-3 text-xs text-gray-500">Reporting as {me?.name}</p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             className={field}
@@ -78,7 +81,7 @@ export default function HomePage() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <select
               className={field}
               value={form.priority}
@@ -88,30 +91,22 @@ export default function HomePage() {
               <option value="MEDIUM">Medium priority</option>
               <option value="HIGH">High priority</option>
             </select>
-            <select
-              className={field}
-              value={form.createdBy}
-              onChange={(e) => setForm({ ...form, createdBy: e.target.value })}
-            >
-              <option value="">Reported by…</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className={field}
-              value={form.assignedTo}
-              onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}
-            >
-              <option value="">Unassigned</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
+            {isAdmin && (
+              <select
+                className={field}
+                value={form.assignedTo}
+                onChange={(e) =>
+                  setForm({ ...form, assignedTo: e.target.value })
+                }
+              >
+                <option value="">Unassigned</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           {formError && <p className="text-sm text-red-600">{formError}</p>}
           <button
@@ -157,12 +152,9 @@ export default function HomePage() {
         )}
 
         <ul className="space-y-2">
-          {data?.bugs.map((bug) => (
-            <li key={bug.id}>
-              <Link
-                href={`/bugs/${bug.id}`}
-                className="block rounded-lg border bg-white p-3 hover:border-black"
-              >
+          {data?.bugs.map((bug) => {
+            const card = (
+              <>
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{bug.title}</span>
                   <span className="flex gap-2">
@@ -176,11 +168,33 @@ export default function HomePage() {
                     ? `Assigned to ${bug.assignedTo.name}`
                     : "Unassigned"}
                 </p>
-              </Link>
-            </li>
-          ))}
+              </>
+            );
+            return (
+              <li key={bug.id}>
+                {isAdmin ? (
+                  <Link
+                    href={`/bugs/${bug.id}`}
+                    className="block rounded-lg border bg-white p-3 hover:border-black"
+                  >
+                    {card}
+                  </Link>
+                ) : (
+                  <div className="rounded-lg border bg-white p-3">{card}</div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <RequireAuth>
+      <HomeContent />
+    </RequireAuth>
   );
 }

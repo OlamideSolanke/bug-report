@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "DEVELOPER";
+export type Role = "ADMIN" | "USER";
 export type Priority = "LOW" | "MEDIUM" | "HIGH";
 export type Status = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 
